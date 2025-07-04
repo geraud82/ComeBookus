@@ -386,6 +386,11 @@ export default function NewBookingPage() {
 
       const bookingData = {
         serviceId: formData.serviceId,
+        serviceName: selectedService?.name,
+        serviceColor: selectedService?.color,
+        serviceCategory: selectedService?.category,
+        duration: selectedService?.duration,
+        price: selectedService?.price,
         startTime: formData.startTime.toISOString(),
         endTime: endTime.toISOString(),
         clientEmail: formData.clientEmail,
@@ -987,7 +992,7 @@ export default function NewBookingPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Service</span>
-                  <span className="text-sm font-medium text-gray-900 text-right">
+                  <span className="text-sm font-medium text-gray-900">
                     {selectedService.name}
                   </span>
                 </div>

@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -23,7 +23,7 @@ model User {
   businessAddress String?
   businessPhone   String?
   businessWebsite String?
-  businessType    BusinessType @default(SALON)
+  businessType    String @default("SALON")
   
   // Location info for proximity search
   latitude        Float?
@@ -66,7 +66,7 @@ model Service {
   price       Float  // Price in cents
   color       String @default("#3B82F6") // Hex color for calendar display
   isActive    Boolean @default(true)
-  category    ServiceCategory @default(HAIR)
+  category    String @default("HAIR")
   
   // Booking settings
   bufferTime     Int @default(0) // Buffer time in minutes
@@ -105,8 +105,8 @@ model Client {
 }
 
 model Booking {
-  id     String        @id @default(cuid())
-  status BookingStatus @default(PENDING)
+  id     String @id @default(cuid())
+  status String @default("PENDING")
   
   // Booking details
   startTime DateTime
@@ -121,7 +121,7 @@ model Booking {
   // Payment info
   totalAmount      Float? // Total amount in cents
   stripePaymentId  String?
-  paymentStatus    PaymentStatus @default(PENDING)
+  paymentStatus    String @default("PENDING")
   
   // Notification tracking
   reminderSent     Boolean @default(false)
@@ -140,43 +140,4 @@ model Booking {
   updatedAt DateTime @updatedAt
   
   @@map("bookings")
-}
-
-enum BookingStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-  COMPLETED
-  NO_SHOW
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
-}
-
-enum BusinessType {
-  SALON
-  SPA
-  MASSAGE
-  BARBERSHOP
-  BEAUTY_CENTER
-  NAIL_SALON
-  WELLNESS_CENTER
-}
-
-enum ServiceCategory {
-  HAIR
-  NAILS
-  MASSAGE
-  FACIAL
-  BODY_TREATMENT
-  WAXING
-  MAKEUP
-  EYEBROWS
-  EYELASHES
-  WELLNESS
-  OTHER
 }

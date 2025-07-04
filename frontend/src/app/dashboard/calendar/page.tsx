@@ -51,6 +51,9 @@ interface Booking {
   status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
   notes?: string
   createdAt: string
+  clientName?: string
+  clientEmail: string
+  clientPhone?: string
 }
 
 const statusConfig = {
@@ -135,6 +138,7 @@ export default function CalendarPage() {
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'booking-created' || e.key === 'booking-updated') {
+        console.log('Storage event detected, refreshing bookings')
         fetchBookings()
         // Clear the flag
         localStorage.removeItem(e.key)
@@ -144,12 +148,21 @@ export default function CalendarPage() {
     window.addEventListener('storage', handleStorageChange)
     
     // Also listen for custom events in the same tab
-    const handleBookingEvent = () => {
+    const handleBookingEvent = (event: any) => {
+      console.log('Booking event detected, refreshing bookings', event)
       fetchBookings()
     }
 
+    // Listen for booking creation events
     window.addEventListener('booking-created', handleBookingEvent)
     window.addEventListener('booking-updated', handleBookingEvent)
+
+    // Check for pending refresh flags on mount
+    if (localStorage.getItem('booking-created')) {
+      console.log('Found pending booking-created flag, refreshing')
+      fetchBookings()
+      localStorage.removeItem('booking-created')
+    }
 
     return () => {
       window.removeEventListener('storage', handleStorageChange)
@@ -161,14 +174,19 @@ export default function CalendarPage() {
   const fetchBookings = async () => {
     setLoading(true)
     try {
+      console.log('Fetching bookings from /api/bookings...')
       // Fetch all bookings without date restrictions to show everything on calendar
       const response = await fetch('/api/bookings')
       
+      console.log('Response status:', response.status)
+      
       if (response.ok) {
         const data = await response.json()
+        console.log('API response data:', data)
         
         // Check if we have real booking data from the API
         if (Array.isArray(data) && data.length > 0) {
+          console.log('Found', data.length, 'bookings from API')
           // Transform API data to match our interface
           const transformedBookings: Booking[] = data.map((booking: any) => ({
             id: booking.id,
@@ -190,10 +208,14 @@ export default function CalendarPage() {
             },
             status: booking.status,
             notes: booking.notes,
-            createdAt: booking.createdAt
+            createdAt: booking.createdAt,
+            clientName: booking.clientName,
+            clientEmail: booking.clientEmail,
+            clientPhone: booking.clientPhone
           }))
           setBookings(transformedBookings)
         } else {
+          console.log('No bookings from API, using mock data')
           // Fallback to comprehensive mock data showing bookings across multiple days/weeks
           const today = new Date()
           const mockBookings: Booking[] = [
@@ -218,7 +240,10 @@ export default function CalendarPage() {
               },
               status: 'CONFIRMED',
               notes: 'First visit',
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              clientName: 'Sarah Johnson',
+              clientEmail: 'sarah.johnson@email.com',
+              clientPhone: '+1 (555) 123-4567'
             },
             {
               id: '2',
@@ -239,7 +264,10 @@ export default function CalendarPage() {
                 phone: '+1 (555) 987-6543'
               },
               status: 'PENDING',
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              clientName: 'Emily Davis',
+              clientEmail: 'emily.davis@email.com',
+              clientPhone: '+1 (555) 987-6543'
             },
             {
               id: '3',
@@ -261,7 +289,10 @@ export default function CalendarPage() {
               },
               status: 'CONFIRMED',
               notes: 'Regular client - prefers firm pressure',
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              clientName: 'Michael Brown',
+              clientEmail: 'michael.brown@email.com',
+              clientPhone: '+1 (555) 456-7890'
             },
             // Tomorrow's appointments
             {
@@ -283,7 +314,10 @@ export default function CalendarPage() {
                 phone: '+1 (555) 321-0987'
               },
               status: 'CONFIRMED',
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              clientName: 'Jessica Wilson',
+              clientEmail: 'jessica.wilson@email.com',
+              clientPhone: '+1 (555) 321-0987'
             },
             {
               id: '5',
@@ -304,7 +338,10 @@ export default function CalendarPage() {
                 phone: '+1 (555) 111-2222'
               },
               status: 'CONFIRMED',
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              clientName: 'Robert Smith',
+              clientEmail: 'robert.smith@email.com',
+              clientPhone: '+1 (555) 111-2222'
             },
             // Day after tomorrow
             {
@@ -327,7 +364,10 @@ export default function CalendarPage() {
               },
               status: 'PENDING',
               notes: 'Wants to go blonde',
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              clientName: 'Amanda Taylor',
+              clientEmail: 'amanda.taylor@email.com',
+              clientPhone: '+1 (555) 654-3210'
             },
             // Next week appointments
             {
@@ -349,7 +389,10 @@ export default function CalendarPage() {
                 phone: '+1 (555) 333-4444'
               },
               status: 'CONFIRMED',
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              clientName: 'Lisa Chen',
+              clientEmail: 'lisa.chen@email.com',
+              clientPhone: '+1 (555) 333-4444'
             },
             {
               id: '8',
@@ -370,7 +413,10 @@ export default function CalendarPage() {
                 phone: '+1 (555) 555-6666'
               },
               status: 'CONFIRMED',
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              clientName: 'James Wilson',
+              clientEmail: 'james.wilson@email.com',
+              clientPhone: '+1 (555) 555-6666'
             },
             {
               id: '9',
@@ -392,7 +438,10 @@ export default function CalendarPage() {
               },
               status: 'PENDING',
               notes: 'Sensitive skin',
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              clientName: 'Maria Rodriguez',
+              clientEmail: 'maria.rodriguez@email.com',
+              clientPhone: '+1 (555) 777-8888'
             },
             // Previous week (for testing past appointments)
             {
@@ -414,7 +463,10 @@ export default function CalendarPage() {
                 phone: '+1 (555) 999-0000'
               },
               status: 'COMPLETED',
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              clientName: 'Jennifer Brown',
+              clientEmail: 'jennifer.brown@email.com',
+              clientPhone: '+1 (555) 999-0000'
             },
             {
               id: '11',
@@ -435,13 +487,46 @@ export default function CalendarPage() {
                 phone: '+1 (555) 123-9876'
               },
               status: 'COMPLETED',
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              clientName: 'David Miller',
+              clientEmail: 'david.miller@email.com',
+              clientPhone: '+1 (555) 123-9876'
             }
           ]
           setBookings(mockBookings)
         }
       } else {
-        console.error('Failed to fetch bookings')
+        console.error('Failed to fetch bookings, response not ok')
+        // Show mock data when API fails
+        const today = new Date()
+        const mockBookings: Booking[] = [
+          {
+            id: 'mock-1',
+            startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0).toISOString(),
+            endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 0).toISOString(),
+            service: {
+              id: 'mock-service-1',
+              name: 'Hair Cut & Styling',
+              duration: 60,
+              price: 4500,
+              color: '#8B5CF6',
+              category: 'HAIR'
+            },
+            client: {
+              id: 'mock-client-1',
+              name: 'Sarah Johnson',
+              email: 'sarah.johnson@email.com',
+              phone: '+1 (555) 123-4567'
+            },
+            status: 'CONFIRMED',
+            notes: 'Mock appointment',
+            createdAt: new Date().toISOString(),
+            clientName: 'Sarah Johnson',
+            clientEmail: 'sarah.johnson@email.com',
+            clientPhone: '+1 (555) 123-4567'
+          }
+        ]
+        setBookings(mockBookings)
       }
     } catch (error) {
       console.error('Error fetching bookings:', error)
@@ -466,7 +551,9 @@ export default function CalendarPage() {
             email: 'sample@email.com'
           },
           status: 'CONFIRMED',
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          clientName: 'Sample Client',
+          clientEmail: 'sample@email.com'
         }
       ]
       setBookings(fallbackBookings)
@@ -622,45 +709,55 @@ export default function CalendarPage() {
           return (
             <div
               key={index}
-              className={`min-h-[120px] p-2 border border-gray-200 cursor-pointer transition-colors ${
+              className={`min-h-[140px] p-2 border border-gray-200 cursor-pointer transition-colors ${
                 day ? 'bg-white hover:bg-gray-50' : 'bg-gray-50'
               } ${isToday ? 'bg-blue-50 border-blue-200' : ''}`}
               onClick={() => day && setSelectedDate(day)}
             >
               {day && (
                 <>
-                  <div className={`text-sm font-medium mb-1 ${
+                  <div className={`text-sm font-medium mb-2 ${
                     isToday ? 'text-blue-600' : 'text-gray-900'
                   }`}>
                     {day.getDate()}
                   </div>
                   <div className="space-y-1">
-                    {dayBookings.slice(0, 3).map(booking => (
-                      <div
-                        key={booking.id}
-                        className="text-xs p-1 rounded truncate cursor-pointer hover:opacity-80"
-                        style={{ 
-                          backgroundColor: booking.service.color + '20',
-                          borderLeft: `3px solid ${booking.service.color}`
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setSelectedBooking(booking)
-                          setShowBookingModal(true)
-                        }}
-                      >
-                        <div className="font-medium">{formatTime(booking.startTime)}</div>
-                        <div className="text-gray-600 truncate">
-                          {booking.service.name}
+                    {dayBookings.slice(0, 4).map(booking => {
+                      const startTime = formatTime(booking.startTime)
+                      const endTime = formatTime(booking.endTime)
+                      const clientName = booking.client?.name || booking.clientName || 'Guest'
+                      
+                      return (
+                        <div
+                          key={booking.id}
+                          className="text-xs p-2 rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm"
+                          style={{ 
+                            backgroundColor: booking.service.color,
+                            color: 'white'
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedBooking(booking)
+                            setShowBookingModal(true)
+                          }}
+                        >
+                          <div className="font-semibold text-xs mb-1">
+                            {startTime} - {endTime}
+                          </div>
+                          <div className="font-medium text-xs mb-0.5">
+                            {clientName} • {booking.service.name}
+                          </div>
+                          {booking.status === 'PENDING' && (
+                            <div className="text-xs opacity-90">
+                              Pending
+                            </div>
+                          )}
                         </div>
-                        <div className="text-gray-500 truncate">
-                          {booking.client.name}
-                        </div>
-                      </div>
-                    ))}
-                    {dayBookings.length > 3 && (
-                      <div className="text-xs text-gray-500 p-1">
-                        +{dayBookings.length - 3} more
+                      )
+                    })}
+                    {dayBookings.length > 4 && (
+                      <div className="text-xs text-gray-500 p-1 text-center">
+                        +{dayBookings.length - 4} more
                       </div>
                     )}
                   </div>
