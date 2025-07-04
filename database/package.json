@@ -1,0 +1,25 @@
+{
+  "name": "comebookus-database",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Database schema and migrations for ComeBookUs",
+  "scripts": {
+    "generate": "prisma generate",
+    "push": "prisma db push",
+    "migrate": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "studio": "prisma studio",
+    "seed": "tsx seeds/index.ts",
+    "reset": "tsx scripts/reset.ts",
+    "backup": "tsx scripts/backup.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.7.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "prisma": "^5.7.1",
+    "tsx": "^4.6.0",
+    "typescript": "^5"
+  }
+}

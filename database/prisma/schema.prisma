@@ -1,0 +1,182 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  avatar    String?
+  phone     String?
+  timezone  String   @default("UTC")
+  
+  // Business info
+  businessName    String?
+  businessAddress String?
+  businessPhone   String?
+  businessWebsite String?
+  businessType    BusinessType @default(SALON)
+  
+  // Location info for proximity search
+  latitude        Float?
+  longitude       Float?
+  city           String?
+  postalCode     String?
+  country        String?
+  
+  // Stripe info
+  stripeCustomerId       String?
+  stripeAccountId        String?
+  stripeAccountEnabled   Boolean @default(false)
+  
+  // Notification preferences
+  emailNotifications Boolean @default(true)
+  smsNotifications   Boolean @default(false)
+  
+  // Public booking page settings
+  bookingPageSlug    String?  @unique
+  bookingPageEnabled Boolean  @default(true)
+  bookingPageTitle   String?
+  bookingPageBio     String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  services Service[]
+  bookings Booking[]
+  clients  Client[]
+  
+  @@map("users")
+}
+
+model Service {
+  id          String @id @default(cuid())
+  name        String
+  description String?
+  duration    Int    // Duration in minutes
+  price       Float  // Price in cents
+  color       String @default("#3B82F6") // Hex color for calendar display
+  isActive    Boolean @default(true)
+  category    ServiceCategory @default(HAIR)
+  
+  // Booking settings
+  bufferTime     Int @default(0) // Buffer time in minutes
+  maxAdvanceBook Int @default(30) // Max days in advance to book
+  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  bookings Booking[]
+  
+  @@map("services")
+}
+
+model Client {
+  id    String  @id @default(cuid())
+  email String
+  name  String?
+  phone String?
+  notes String?
+  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  bookings Booking[]
+  
+  @@unique([email, userId])
+  @@map("clients")
+}
+
+model Booking {
+  id     String        @id @default(cuid())
+  status BookingStatus @default(PENDING)
+  
+  // Booking details
+  startTime DateTime
+  endTime   DateTime
+  notes     String?
+  
+  // Client info (can be guest or registered client)
+  clientEmail String
+  clientName  String?
+  clientPhone String?
+  
+  // Payment info
+  totalAmount      Float? // Total amount in cents
+  stripePaymentId  String?
+  paymentStatus    PaymentStatus @default(PENDING)
+  
+  // Notification tracking
+  reminderSent     Boolean @default(false)
+  confirmationSent Boolean @default(false)
+  
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("bookings")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum BusinessType {
+  SALON
+  SPA
+  MASSAGE
+  BARBERSHOP
+  BEAUTY_CENTER
+  NAIL_SALON
+  WELLNESS_CENTER
+}
+
+enum ServiceCategory {
+  HAIR
+  NAILS
+  MASSAGE
+  FACIAL
+  BODY_TREATMENT
+  WAXING
+  MAKEUP
+  EYEBROWS
+  EYELASHES
+  WELLNESS
+  OTHER
+}

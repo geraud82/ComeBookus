@@ -1,0 +1,33 @@
+{
+  "name": "comebookus-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Backend API for ComeBookUs appointment management platform",
+  "scripts": {
+    "dev": "next dev -p 3004",
+    "build": "next build",
+    "start": "next start -p 3004",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.7.1",
+    "@supabase/auth-helpers-nextjs": "^0.8.7",
+    "@supabase/supabase-js": "^2.39.0",
+    "@stripe/stripe-js": "^2.4.0",
+    "next": "14.0.4",
+    "react": "^18",
+    "react-dom": "^18",
+    "resend": "^3.0.0",
+    "stripe": "^14.12.0",
+    "twilio": "^4.19.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.4",
+    "typescript": "^5"
+  }
+}
