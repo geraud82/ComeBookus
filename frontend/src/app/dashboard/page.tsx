@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 import { 
   Calendar, 
   DollarSign, 
@@ -57,11 +58,33 @@ export default function DashboardPage() {
 
   const fetchDashboardStats = async () => {
     try {
+      // Get the current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      
+      if (sessionError || !session) {
+        console.error('No valid session found:', sessionError)
+        router.push('/auth/login')
+        return
+      }
+
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'
-      const response = await fetch(`${apiUrl}/api/dashboard`)
+      const response = await fetch(`${apiUrl}/api/dashboard`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      })
+      
       if (response.ok) {
         const data = await response.json()
         setStats(data)
+      } else if (response.status === 401) {
+        // Unauthorized - redirect to login
+        router.push('/auth/login')
+      } else {
+        console.error('Failed to fetch dashboard stats:', response.status, response.statusText)
       }
     } catch (error) {
       console.error('Error fetching dashboard stats:', error)

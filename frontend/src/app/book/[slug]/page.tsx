@@ -65,12 +65,33 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
 
   const fetchBookingPageData = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'
-      const response = await fetch(`${apiUrl}/api/public/${params.slug}`)
+      // Try to fetch from backend API first, then fallback to mock data
+      const response = await fetch(`/api/public/${params.slug}`)
       
       if (response.ok) {
         const data = await response.json()
-        setBookingData(data)
+        // Map the API response to the expected structure
+        const mappedData: BookingPageData = {
+          id: data.id,
+          name: data.businessName,
+          businessName: data.businessName,
+          businessAddress: data.address,
+          businessPhone: data.phone,
+          bookingPageTitle: data.businessName,
+          bookingPageBio: data.description,
+          avatar: data.images?.[0] || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face',
+          timezone: 'America/New_York',
+          services: data.services.map((service: any) => ({
+            id: service.id,
+            name: service.name,
+            description: service.description,
+            duration: service.duration,
+            price: service.price,
+            color: service.color,
+            maxAdvanceBook: service.maxAdvanceBook
+          }))
+        }
+        setBookingData(mappedData)
       } else {
         // Fallback to mock data for demo
         const mockData: BookingPageData = {
@@ -252,8 +273,7 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
         requiresPayment: selectedService.price > 0,
       }
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3004'
-      const response = await fetch(`${apiUrl}/api/bookings`, {
+      const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -284,7 +304,7 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
     'October', 'November', 'December', 'January', 'February', 'March'
   ]
 
-  const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
   if (loading) {
     return (
@@ -384,13 +404,13 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
             
             {/* Calendar Grid */}
             <div className="grid grid-cols-7 gap-1 mb-4">
-              {dayNames.map((day) => (
-                <div key={day} className="text-center text-sm font-medium text-gray-500 py-2">
-                  {day}
+              {dayNames.map((day, index) => (
+                <div key={`day-${index}`} className="text-center text-sm font-medium text-gray-500 py-2">
+                  {day.charAt(0)}
                 </div>
               ))}
               {getDaysInMonth(currentMonth).map((date, index) => (
-                <div key={index} className="aspect-square">
+                <div key={`date-${index}`} className="aspect-square">
                   {date && (
                     <button
                       onClick={() => handleDateSelect(date)}
@@ -417,7 +437,7 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
               <div className="space-y-2">
                 {availableSlots.map((time, index) => (
                   <button
-                    key={index}
+                    key={`time-${index}`}
                     onClick={() => handleTimeSelect(time)}
                     className={`w-full text-left px-4 py-3 rounded-lg border transition-all ${
                       selectedTime === time

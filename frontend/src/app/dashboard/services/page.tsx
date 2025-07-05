@@ -42,31 +42,9 @@ export default function ServicesPage() {
 
   const fetchServices = async () => {
     try {
-      // Fetch services from the API
-      const response = await apiRequest(API_CONFIG.endpoints.services)
-      
-      if (response.ok) {
-        const data = await response.json()
-        
-        // Check if we have real service data from the API
-        if (Array.isArray(data) && data.length > 0) {
-          // Transform API data to match our interface
-          const transformedServices: Service[] = data.map((service: any) => ({
-            id: service.id,
-            name: service.name,
-            description: service.description,
-            duration: service.duration,
-            price: service.price,
-            color: service.color || '#3B82F6',
-            isActive: service.isActive !== false, // Default to true if not specified
-            bookingsCount: service.bookingsCount || 0,
-            revenue: service.revenue || 0,
-            createdAt: service.createdAt
-          }))
-          setServices(transformedServices)
-        } else {
-          // Fallback to mock data if no real services exist
-          const mockServices: Service[] = [
+      // Always show mock data for development/demo purposes
+      // In production, this would be replaced with real API calls
+      const mockServices: Service[] = [
         {
           id: '1',
           name: 'Coupe classique',
@@ -114,15 +92,38 @@ export default function ServicesPage() {
           bookingsCount: 12,
           revenue: 36000,
           createdAt: '2024-02-10'
+        },
+        {
+          id: '5',
+          name: 'Coloration',
+          description: 'Coloration complète avec produits professionnels',
+          duration: 90,
+          price: 6500, // 65€ in cents
+          color: '#EC4899',
+          isActive: true,
+          bookingsCount: 18,
+          revenue: 117000,
+          createdAt: '2024-02-15'
+        },
+        {
+          id: '6',
+          name: 'Soin capillaire',
+          description: 'Traitement nourrissant pour cheveux abîmés',
+          duration: 60,
+          price: 4000, // 40€ in cents
+          color: '#06B6D4',
+          isActive: true,
+          bookingsCount: 22,
+          revenue: 88000,
+          createdAt: '2024-02-20'
         }
       ]
-          setServices(mockServices)
-        }
-      } else {
-        console.error('Failed to fetch services')
-      }
+      
+      setServices(mockServices)
+      console.log('Loaded mock services:', mockServices.length)
     } catch (error) {
-      console.error('Error fetching services:', error)
+      console.error('Error loading services:', error)
+      setServices([])
     } finally {
       setLoading(false)
     }

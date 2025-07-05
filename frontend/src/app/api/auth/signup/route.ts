@@ -1,21 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import { prisma } from '@/lib/prisma'
+import { validateUserRegistration, sanitizeString } from '@/lib/validation'
 
 export async function POST(request: NextRequest) {
   try {
     console.log('Signup API called')
-    const { email, password, name, businessName } = await request.json()
-    console.log('Request data:', { email, name, businessName, passwordLength: password?.length })
+    const rawData = await request.json()
+    console.log('Request data:', { 
+      email: rawData.email, 
+      name: rawData.name, 
+      businessName: rawData.businessName, 
+      passwordLength: rawData.password?.length 
+    })
 
-    // Validate required fields
-    if (!email || !password) {
-      console.error('Missing required fields:', { email: !!email, password: !!password })
+    // Validate and sanitize input data
+    const validationResult = validateUserRegistration(rawData)
+    if (!validationResult.success) {
+      console.error('Validation errors:', validationResult.errors)
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { 
+          error: 'Validation failed', 
+          details: validationResult.errors 
+        },
         { status: 400 }
       )
     }
+
+    const { email, password, name, businessName, businessType } = validationResult.data!
 
     // Check if supabaseAdmin is properly configured
     if (!supabaseAdmin) {

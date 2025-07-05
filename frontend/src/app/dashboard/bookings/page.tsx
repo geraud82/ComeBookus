@@ -114,143 +114,142 @@ export default function BookingsPage() {
   const fetchBookings = async () => {
     setLoading(true)
     try {
-      // Fetch all bookings from the API
-      const response = await apiRequest(API_CONFIG.endpoints.bookings)
-      
-      if (response.ok) {
-        const data = await response.json()
-        
-        // Check if we have real booking data from the API
-        if (Array.isArray(data) && data.length > 0) {
-          // Transform API data to match our interface
-          const transformedBookings: Booking[] = data.map((booking: any) => ({
-            id: booking.id,
-            startTime: booking.startTime,
-            endTime: booking.endTime,
-            service: {
-              id: booking.service.id,
-              name: booking.service.name,
-              duration: booking.service.duration,
-              price: booking.service.price,
-              color: booking.service.color || '#8B5CF6',
-              category: booking.service.category || 'GENERAL'
-            },
-            client: booking.client ? {
-              id: booking.client.id,
-              name: booking.client.name,
-              email: booking.client.email,
-              phone: booking.client.phone
-            } : undefined,
-            clientName: booking.clientName || booking.client?.name,
-            clientEmail: booking.clientEmail || booking.client?.email,
-            clientPhone: booking.clientPhone || booking.client?.phone,
-            status: booking.status,
-            totalAmount: booking.totalAmount || booking.service.price,
-            paymentStatus: booking.paymentStatus,
-            notes: booking.notes,
-            reminderSent: booking.reminderSent,
-            confirmationSent: booking.confirmationSent,
-            createdAt: booking.createdAt,
-            updatedAt: booking.updatedAt
-          }))
-          setBookings(transformedBookings)
-        } else {
-          // Fallback to mock data if no real bookings exist
-          const today = new Date()
-          const mockBookings: Booking[] = [
-            {
-              id: '1',
-              status: 'CONFIRMED',
-              startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 0).toISOString(),
-              endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 11, 0).toISOString(),
-              clientEmail: 'sarah.johnson@email.com',
-              clientName: 'Sarah Johnson',
-              clientPhone: '+1 (555) 123-4567',
-              totalAmount: 4500,
-              paymentStatus: 'PAID',
-              reminderSent: true,
-              confirmationSent: true,
-              createdAt: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-              service: {
-                id: 'service1',
-                name: 'Hair Cut & Styling',
-                duration: 60,
-                price: 4500,
-                color: '#8B5CF6'
-              }
-            },
-            {
-              id: '2',
-              status: 'PENDING',
-              startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 14, 0).toISOString(),
-              endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 15, 30).toISOString(),
-              clientEmail: 'emily.davis@email.com',
-              clientName: 'Emily Davis',
-              clientPhone: '+1 (555) 987-6543',
-              totalAmount: 7500,
-              paymentStatus: 'PENDING',
-              reminderSent: false,
-              confirmationSent: false,
-              createdAt: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-              service: {
-                id: 'service2',
-                name: 'Facial Treatment',
-                duration: 90,
-                price: 7500,
-                color: '#10B981'
-              }
-            },
-            {
-              id: '3',
-              status: 'COMPLETED',
-              startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1, 9, 0).toISOString(),
-              endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1, 10, 30).toISOString(),
-              clientEmail: 'michael.brown@email.com',
-              clientName: 'Michael Brown',
-              clientPhone: '+1 (555) 456-7890',
-              totalAmount: 8500,
-              paymentStatus: 'PAID',
-              reminderSent: true,
-              confirmationSent: true,
-              createdAt: new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-              service: {
-                id: 'service3',
-                name: 'Deep Tissue Massage',
-                duration: 90,
-                price: 8500,
-                color: '#F59E0B'
-              }
-            },
-            {
-              id: '4',
-              status: 'CANCELLED',
-              startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2, 16, 0).toISOString(),
-              endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2, 17, 0).toISOString(),
-              clientEmail: 'jessica.wilson@email.com',
-              clientName: 'Jessica Wilson',
-              clientPhone: '+1 (555) 321-0987',
-              totalAmount: 5500,
-              paymentStatus: 'REFUNDED',
-              reminderSent: false,
-              confirmationSent: true,
-              createdAt: new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-              service: {
-                id: 'service4',
-                name: 'Manicure & Pedicure',
-                duration: 60,
-                price: 5500,
-                color: '#EF4444'
-              }
-            }
-          ]
-          setBookings(mockBookings)
+      // Always show mock data for development/demo purposes
+      // In production, this would be replaced with real API calls
+      const today = new Date()
+      const mockBookings: Booking[] = [
+        {
+          id: '1',
+          status: 'CONFIRMED',
+          startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 10, 0).toISOString(),
+          endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate(), 11, 0).toISOString(),
+          clientEmail: 'sarah.johnson@email.com',
+          clientName: 'Sarah Johnson',
+          clientPhone: '+1 (555) 123-4567',
+          totalAmount: 4500,
+          paymentStatus: 'PAID',
+          reminderSent: true,
+          confirmationSent: true,
+          createdAt: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          service: {
+            id: 'service1',
+            name: 'Hair Cut & Styling',
+            duration: 60,
+            price: 4500,
+            color: '#8B5CF6'
+          }
+        },
+        {
+          id: '2',
+          status: 'PENDING',
+          startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 14, 0).toISOString(),
+          endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1, 15, 30).toISOString(),
+          clientEmail: 'emily.davis@email.com',
+          clientName: 'Emily Davis',
+          clientPhone: '+1 (555) 987-6543',
+          totalAmount: 7500,
+          paymentStatus: 'PENDING',
+          reminderSent: false,
+          confirmationSent: false,
+          createdAt: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+          service: {
+            id: 'service2',
+            name: 'Facial Treatment',
+            duration: 90,
+            price: 7500,
+            color: '#10B981'
+          }
+        },
+        {
+          id: '3',
+          status: 'COMPLETED',
+          startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1, 9, 0).toISOString(),
+          endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1, 10, 30).toISOString(),
+          clientEmail: 'michael.brown@email.com',
+          clientName: 'Michael Brown',
+          clientPhone: '+1 (555) 456-7890',
+          totalAmount: 8500,
+          paymentStatus: 'PAID',
+          reminderSent: true,
+          confirmationSent: true,
+          createdAt: new Date(today.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+          service: {
+            id: 'service3',
+            name: 'Deep Tissue Massage',
+            duration: 90,
+            price: 8500,
+            color: '#F59E0B'
+          }
+        },
+        {
+          id: '4',
+          status: 'CANCELLED',
+          startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2, 16, 0).toISOString(),
+          endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2, 17, 0).toISOString(),
+          clientEmail: 'jessica.wilson@email.com',
+          clientName: 'Jessica Wilson',
+          clientPhone: '+1 (555) 321-0987',
+          totalAmount: 5500,
+          paymentStatus: 'REFUNDED',
+          reminderSent: false,
+          confirmationSent: true,
+          createdAt: new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          service: {
+            id: 'service4',
+            name: 'Manicure & Pedicure',
+            duration: 60,
+            price: 5500,
+            color: '#EF4444'
+          }
+        },
+        {
+          id: '5',
+          status: 'CONFIRMED',
+          startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2, 11, 30).toISOString(),
+          endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2, 12, 30).toISOString(),
+          clientEmail: 'alex.martinez@email.com',
+          clientName: 'Alex Martinez',
+          clientPhone: '+1 (555) 654-3210',
+          totalAmount: 6000,
+          paymentStatus: 'PAID',
+          reminderSent: false,
+          confirmationSent: true,
+          createdAt: new Date(today.getTime() - 4 * 60 * 60 * 1000).toISOString(),
+          service: {
+            id: 'service5',
+            name: 'Color & Highlights',
+            duration: 60,
+            price: 6000,
+            color: '#EC4899'
+          }
+        },
+        {
+          id: '6',
+          status: 'PENDING',
+          startTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3, 15, 0).toISOString(),
+          endTime: new Date(today.getFullYear(), today.getMonth(), today.getDate() + 3, 16, 0).toISOString(),
+          clientEmail: 'lisa.chen@email.com',
+          clientName: 'Lisa Chen',
+          clientPhone: '+1 (555) 789-0123',
+          totalAmount: 3500,
+          paymentStatus: 'PENDING',
+          reminderSent: false,
+          confirmationSent: false,
+          createdAt: new Date(today.getTime() - 2 * 60 * 60 * 1000).toISOString(),
+          service: {
+            id: 'service6',
+            name: 'Eyebrow Shaping',
+            duration: 60,
+            price: 3500,
+            color: '#06B6D4'
+          }
         }
-      } else {
-        console.error('Failed to fetch bookings')
-      }
+      ]
+      
+      setBookings(mockBookings)
+      console.log('Loaded mock bookings:', mockBookings.length)
     } catch (error) {
-      console.error('Error fetching bookings:', error)
-      // Show empty state on error
+      console.error('Error loading bookings:', error)
       setBookings([])
     } finally {
       setLoading(false)
