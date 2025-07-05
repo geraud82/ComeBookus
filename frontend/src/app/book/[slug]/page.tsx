@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { MapPin, Clock, Euro, Calendar, User, Mail, Phone, MessageSquare } from 'lucide-react'
+import { MapPin, Clock, Euro, Calendar, User, Mail, Phone, MessageSquare, CreditCard, AlertCircle } from 'lucide-react'
+import { Input } from '@/components/ui/Input'
+import { validateEmail, validatePhone, validateName } from '@/lib/validation'
 
 interface Service {
   id: string
@@ -35,6 +37,13 @@ interface BookingFormData {
   notes: string
 }
 
+interface FormErrors {
+  clientName?: string
+  clientEmail?: string
+  clientPhone?: string
+  general?: string
+}
+
 export default function PublicBookingPage({ params }: { params: { slug: string } }) {
   const [bookingData, setBookingData] = useState<BookingPageData | null>(null)
   const [selectedService, setSelectedService] = useState<Service | null>(null)
@@ -44,6 +53,9 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [showBookingForm, setShowBookingForm] = useState(false)
+  const [formErrors, setFormErrors] = useState<FormErrors>({})
+  const [requiresPayment, setRequiresPayment] = useState(false)
   const [formData, setFormData] = useState<BookingFormData>({
     serviceId: '',
     startTime: '',
@@ -237,19 +249,53 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
     setSelectedTime(time)
   }
 
-  const handleBookNow = async () => {
+  const handleBookNow = () => {
     if (!selectedService || !selectedDate || !selectedTime) {
-      alert('Veuillez sélectionner un service, une date et une heure')
+      setFormErrors({ general: 'Veuillez sélectionner un service, une date et une heure' })
       return
     }
 
-    // For demo purposes, show a simple form
-    const clientName = prompt('Votre nom complet:')
-    const clientEmail = prompt('Votre email:')
-    const clientPhone = prompt('Votre téléphone (optionnel):')
+    setRequiresPayment(selectedService.price > 0)
+    setShowBookingForm(true)
+    setFormErrors({})
+  }
 
-    if (!clientName || !clientEmail) {
-      alert('Nom et email sont requis')
+  const validateForm = (): boolean => {
+    const errors: FormErrors = {}
+
+    // Validate name
+    const nameValidation = validateName(formData.clientName)
+    if (!nameValidation.success) {
+      errors.clientName = nameValidation.errors?.[0]
+    }
+
+    // Validate email
+    const emailValidation = validateEmail(formData.clientEmail)
+    if (!emailValidation.success) {
+      errors.clientEmail = emailValidation.errors?.[0]
+    }
+
+    // Validate phone (optional but must be valid if provided)
+    if (formData.clientPhone.trim()) {
+      const phoneValidation = validatePhone(formData.clientPhone)
+      if (!phoneValidation.success) {
+        errors.clientPhone = phoneValidation.errors?.[0]
+      }
+    }
+
+    setFormErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!validateForm()) {
+      return
+    }
+
+    if (!selectedService || !selectedDate || !selectedTime) {
+      setFormErrors({ general: 'Informations de réservation manquantes' })
       return
     }
 
@@ -266,10 +312,10 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
       const bookingData = {
         serviceId: selectedService.id,
         startTime: startTime.toISOString(),
-        clientEmail,
-        clientName,
-        clientPhone: clientPhone || '',
-        notes: '',
+        clientEmail: formData.clientEmail,
+        clientName: formData.clientName,
+        clientPhone: formData.clientPhone || '',
+        notes: formData.notes || '',
         requiresPayment: selectedService.price > 0,
       }
 
@@ -282,21 +328,54 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
       })
 
       if (response.ok) {
+        // Show success message
         alert(`Réservation confirmée pour ${selectedService.name} le ${selectedDate.toLocaleDateString('fr-FR')} à ${selectedTime}`)
-        // Reset form
+        
+        // Reset form and state
         setSelectedService(null)
         setSelectedDate(new Date())
         setSelectedTime(null)
+        setShowBookingForm(false)
+        setFormData({
+          serviceId: '',
+          startTime: '',
+          clientEmail: '',
+          clientName: '',
+          clientPhone: '',
+          notes: '',
+        })
+        setFormErrors({})
       } else {
         const error = await response.json()
-        alert(error.error || 'Erreur lors de la réservation')
+        setFormErrors({ general: error.error || 'Erreur lors de la réservation' })
       }
     } catch (error) {
       console.error('Error creating booking:', error)
-      alert('Erreur lors de la réservation')
+      setFormErrors({ general: 'Erreur lors de la réservation' })
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const handleInputChange = (field: keyof BookingFormData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    // Clear error when user starts typing
+    if (formErrors[field as keyof FormErrors]) {
+      setFormErrors(prev => ({ ...prev, [field]: undefined }))
+    }
+  }
+
+  const handleBackToSelection = () => {
+    setShowBookingForm(false)
+    setFormErrors({})
+    setFormData({
+      serviceId: '',
+      startTime: '',
+      clientEmail: '',
+      clientName: '',
+      clientPhone: '',
+      notes: '',
+    })
   }
 
   const monthNames = [
@@ -453,20 +532,156 @@ export default function PublicBookingPage({ params }: { params: { slug: string }
           )}
         </div>
 
-        {/* Book Now Button */}
-        <div className="px-6 pb-8">
-          <button
-            onClick={handleBookNow}
-            disabled={!selectedService || !selectedDate || !selectedTime || submitting}
-            className={`w-full py-4 rounded-lg font-semibold text-white transition-all ${
-              selectedService && selectedDate && selectedTime && !submitting
-                ? 'bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl'
-                : 'bg-gray-300 cursor-not-allowed'
-            }`}
-          >
-            {submitting ? 'Réservation en cours...' : 'Réserver maintenant'}
-          </button>
-        </div>
+        {/* Booking Form or Book Now Button */}
+        {showBookingForm ? (
+          <div className="px-6 pb-8">
+            {/* Booking Summary */}
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h3 className="font-semibold text-gray-900 mb-2">Résumé de votre réservation</h3>
+              <div className="space-y-1 text-sm text-gray-600">
+                <div className="flex justify-between">
+                  <span>Service:</span>
+                  <span className="font-medium">{selectedService?.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Date:</span>
+                  <span className="font-medium">{selectedDate.toLocaleDateString('fr-FR')}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Heure:</span>
+                  <span className="font-medium">{selectedTime}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Durée:</span>
+                  <span className="font-medium">{formatDuration(selectedService?.duration || 0)}</span>
+                </div>
+                <div className="flex justify-between font-semibold text-gray-900 pt-2 border-t border-blue-200">
+                  <span>Prix:</span>
+                  <span>{formatPrice(selectedService?.price || 0)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Booking Form */}
+            <form onSubmit={handleFormSubmit} className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Vos informations</h3>
+              
+              {/* General Error */}
+              {formErrors.general && (
+                <div className="flex items-center p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0" />
+                  <span className="text-sm text-red-700">{formErrors.general}</span>
+                </div>
+              )}
+
+              {/* Name Field */}
+              <Input
+                label="Nom complet"
+                icon={<User className="h-4 w-4" />}
+                type="text"
+                value={formData.clientName}
+                onChange={(e) => handleInputChange('clientName', e.target.value)}
+                error={formErrors.clientName}
+                placeholder="Votre nom complet"
+                required
+              />
+
+              {/* Email Field */}
+              <Input
+                label="Adresse email"
+                icon={<Mail className="h-4 w-4" />}
+                type="email"
+                value={formData.clientEmail}
+                onChange={(e) => handleInputChange('clientEmail', e.target.value)}
+                error={formErrors.clientEmail}
+                placeholder="votre@email.com"
+                required
+              />
+
+              {/* Phone Field */}
+              <Input
+                label="Numéro de téléphone (optionnel)"
+                icon={<Phone className="h-4 w-4" />}
+                type="tel"
+                value={formData.clientPhone}
+                onChange={(e) => handleInputChange('clientPhone', e.target.value)}
+                error={formErrors.clientPhone}
+                placeholder="+33 6 12 34 56 78"
+              />
+
+              {/* Notes Field */}
+              <div className="form-field">
+                <label className="form-label">
+                  <MessageSquare className="h-4 w-4 inline-flex items-center mr-1" />
+                  Notes (optionnel)
+                </label>
+                <textarea
+                  className="form-textarea"
+                  value={formData.notes}
+                  onChange={(e) => handleInputChange('notes', e.target.value)}
+                  placeholder="Informations supplémentaires..."
+                  rows={3}
+                />
+              </div>
+
+              {/* Payment Information */}
+              {requiresPayment && (
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-center mb-2">
+                    <CreditCard className="h-5 w-5 text-yellow-600 mr-2" />
+                    <span className="font-medium text-yellow-800">Paiement requis</span>
+                  </div>
+                  <p className="text-sm text-yellow-700">
+                    Un paiement de <strong>{formatPrice(selectedService?.price || 0)}</strong> sera requis pour confirmer votre réservation. 
+                    Vous recevrez un lien de paiement sécurisé par email après la confirmation.
+                  </p>
+                </div>
+              )}
+
+              {/* Form Actions */}
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={handleBackToSelection}
+                  className="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                >
+                  Retour
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className={`flex-1 py-3 px-4 rounded-lg font-semibold text-white transition-all ${
+                    submitting
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl'
+                  }`}
+                >
+                  {submitting ? 'Confirmation...' : 'Confirmer la réservation'}
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : (
+          <div className="px-6 pb-8">
+            {formErrors.general && (
+              <div className="flex items-center p-3 mb-4 bg-red-50 border border-red-200 rounded-lg">
+                <AlertCircle className="h-5 w-5 text-red-500 mr-2 flex-shrink-0" />
+                <span className="text-sm text-red-700">{formErrors.general}</span>
+              </div>
+            )}
+            <button
+              onClick={handleBookNow}
+              disabled={!selectedService || !selectedDate || !selectedTime || submitting}
+              className={`w-full py-4 rounded-lg font-semibold text-white transition-all ${
+                selectedService && selectedDate && selectedTime && !submitting
+                  ? 'bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl'
+                  : 'bg-gray-300 cursor-not-allowed'
+              }`}
+            >
+              {submitting ? 'Réservation en cours...' : 'Réserver maintenant'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

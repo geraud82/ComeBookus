@@ -159,16 +159,65 @@ export default function HomePage() {
       <section className="relative bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 pt-20 pb-16">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-              Find your beauty salon
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600"> near you</span>
-            </h1>
-            
-            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Discover the best hair salons, spas, and massage centers in your area. 
-              Book online in just a few clicks.
-            </p>
+          {/* Hero Content avec image */}
+          <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
+            {/* Contenu texte à gauche */}
+            <div className="text-left">
+              <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+                Find your beauty salon
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-600 to-purple-600"> near you</span>
+              </h1>
+              
+              <p className="text-xl md:text-2xl text-gray-600 mb-8">
+                Discover the best hair salons, spas, and massage centers in your area. 
+                Book online in just a few clicks.
+              </p>
+
+              {/* Statistiques */}
+              <div className="grid grid-cols-3 gap-6 mb-8">
+                <div className="text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-purple-600">500+</div>
+                  <div className="text-sm text-gray-600">Beauty Salons</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-pink-600">10k+</div>
+                  <div className="text-sm text-gray-600">Happy Clients</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-indigo-600">24/7</div>
+                  <div className="text-sm text-gray-600">Online Booking</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Image à droite */}
+            <div className="relative">
+              <div className="relative z-10">
+                <img
+                  src="https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
+                  alt="Beauty salon interior with modern styling chairs"
+                  className="rounded-2xl shadow-2xl w-full h-[400px] md:h-[500px] object-cover"
+                />
+              </div>
+              {/* Éléments décoratifs */}
+              <div className="absolute -top-4 -left-4 w-24 h-24 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full opacity-20 blur-xl"></div>
+              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-br from-purple-400 to-indigo-500 rounded-full opacity-20 blur-xl"></div>
+              
+              {/* Badge flottant */}
+              <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg">
+                <div className="flex items-center space-x-2">
+                  <div className="flex -space-x-2">
+                    <img className="w-6 h-6 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1494790108755-2616b612b786?ixlib=rb-4.0.3&auto=format&fit=crop&w=50&q=80" alt="" />
+                    <img className="w-6 h-6 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=50&q=80" alt="" />
+                    <img className="w-6 h-6 rounded-full border-2 border-white" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&auto=format&fit=crop&w=50&q=80" alt="" />
+                  </div>
+                  <div className="text-sm">
+                    <div className="font-semibold text-gray-900">4.9★</div>
+                    <div className="text-gray-600 text-xs">2k+ reviews</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Barre de recherche et filtres */}
@@ -246,16 +295,61 @@ export default function HomePage() {
               </div>
 
               {locationError && (
-                <div className="text-red-600 text-sm mt-2 flex items-center">
-                  <MapPin className="w-4 h-4 mr-1" />
-                  {locationError}
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-4">
+                  <div className="flex items-start">
+                    <MapPin className="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <div className="text-red-800 font-medium text-sm">Location Access Required</div>
+                      <div className="text-red-700 text-sm mt-1">
+                        {locationError} Please enable location access in your browser settings to find nearby businesses automatically.
+                      </div>
+                      <button
+                        onClick={() => {
+                          setLocationError('');
+                          if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(
+                              (position) => {
+                                setUserLocation({
+                                  lat: position.coords.latitude,
+                                  lng: position.coords.longitude
+                                });
+                                searchNearbyBusinesses(position.coords.latitude, position.coords.longitude);
+                              },
+                              (error) => {
+                                console.error('Geolocation error:', error);
+                                setLocationError('Unable to get your location. Please allow geolocation access.');
+                              }
+                            );
+                          }
+                        }}
+                        className="mt-2 text-sm text-red-600 hover:text-red-800 font-medium underline"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {userLocation && (
-                <div className="text-green-600 text-sm mt-2 flex items-center">
-                  <Navigation className="w-4 h-4 mr-1" />
-                  Location detected - Searching for nearby businesses
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
+                  <div className="flex items-center">
+                    <Navigation className="w-5 h-5 text-green-500 mr-2" />
+                    <div className="text-green-800 text-sm">
+                      <span className="font-medium">Location detected!</span> Searching for nearby businesses in your area.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!userLocation && !locationError && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+                  <div className="flex items-center">
+                    <MapPin className="w-5 h-5 text-blue-500 mr-2" />
+                    <div className="text-blue-800 text-sm">
+                      <span className="font-medium">Getting your location...</span> This helps us find the best businesses near you.
+                    </div>
+                  </div>
                 </div>
               )}
             </Card>
